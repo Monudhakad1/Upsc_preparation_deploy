@@ -1,0 +1,3 @@
+ALTER TABLE revisions
+ALTER COLUMN confidence TYPE INTEGER
+USING confidence::INTEGER;

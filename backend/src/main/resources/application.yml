@@ -1,0 +1,51 @@
+spring:
+  application:
+    name: upsc-mentor-backend
+
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/upsc_mentor}
+    username: ${DATABASE_USERNAME:db}
+    password: ${DATABASE_PASSWORD:pass}
+
+  jpa:
+    hibernate:
+      # Flyway migrations are the source of truth for schema (spec section 31).
+      # 'validate' catches entity/schema drift at boot instead of silently
+      # auto-altering a production table.
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: false
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+  servlet:
+    multipart:
+      max-file-size: 15MB
+      max-request-size: 15MB
+
+server:
+  port: ${PORT:8080}
+
+app:
+  jwt:
+    secret: ${APP_JWT_SECRET}
+    expiration-ms: ${APP_JWT_EXPIRATION_MS:86400000} # 24h
+
+  cors:
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:3000}
+
+  seed:
+    mentor-email: ${SEED_MENTOR_EMAIL}
+    mentor-password: ${SEED_MENTOR_PASSWORD}
+    mentor-name: ${SEED_MENTOR_NAME:Mentor}
+    aspirant-email: ${SEED_ASPIRANT_EMAIL}
+    aspirant-password: ${SEED_ASPIRANT_PASSWORD}
+    aspirant-name: ${SEED_ASPIRANT_NAME:Aspirant}
+
+logging:
+  level:
+    com.upscmentor: INFO

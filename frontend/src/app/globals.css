@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+:root {
+  /* Paper/ledger surface */
+  --color-paper: #f6f3ec;
+  --color-paper-raised: #fffdf9;
+  --color-ink: #23241f;
+  --color-ink-soft: #63625a;
+  --color-rule: #ddd6c5;
+
+  /* Brand ink - the "mentor's fountain pen" accent used for primary actions.
+     Deliberately NOT one of the status colors below, which are reserved
+     and meaningful (spec section 29). */
+  --color-brand: #1f3d3a;
+  --color-brand-soft: #e4ede9;
+
+  /* Reserved status vocabulary - used from Phase 3 onward for syllabus/
+     revision status. Defined here so every later phase pulls from the
+     same five colors instead of improvising new ones. */
+  --color-status-completed: #2f6f4e;
+  --color-status-progress: #b8862e;
+  --color-status-critical: #b33a2e;
+  --color-status-revision: #2e5fa3;
+  --color-status-notstarted: #8a897f;
+}
+
+@theme inline {
+  --color-paper: var(--color-paper);
+  --color-paper-raised: var(--color-paper-raised);
+  --color-ink: var(--color-ink);
+  --color-ink-soft: var(--color-ink-soft);
+  --color-rule: var(--color-rule);
+  --color-brand: var(--color-brand);
+  --color-brand-soft: var(--color-brand-soft);
+  --color-status-completed: var(--color-status-completed);
+  --color-status-progress: var(--color-status-progress);
+  --color-status-critical: var(--color-status-critical);
+  --color-status-revision: var(--color-status-revision);
+  --color-status-notstarted: var(--color-status-notstarted);
+
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-data: var(--font-data);
+}
+
+/* System-font stacks (no external font fetch at build time - see README for
+   swapping in real webfonts like Source Serif 4 / IBM Plex once deployed
+   somewhere with unrestricted network access, e.g. Vercel). */
+:root {
+  --font-display: ui-serif, Georgia, "Times New Roman", serif;
+  --font-body: ui-sans-serif, system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-data: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+
+/* Keyboard focus must stay visible everywhere - this is a daily-use tool. */
+:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
