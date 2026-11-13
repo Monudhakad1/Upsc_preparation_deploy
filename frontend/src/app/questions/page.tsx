@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { ListSkeleton } from "@/components/Skeleton";
+import { AnswerTimer, countWords } from "@/components/AnswerTimer";
 import { formatDate, paperLabel, todayISO } from "@/lib/format";
 import { RequireAuth } from "@/components/RequireAuth";
 import { AppShell } from "@/components/AppShell";
@@ -375,10 +376,11 @@ function QuestionCard({
           {/* Aspirant: submit / view own answer */}
           {!isMentor && !question.submission && (
             <div className="space-y-2">
+              <AnswerTimer text={answerText} marks={question.marks} timeLimitMinutes={question.timeLimitMinutes} />
               <textarea
                 value={answerText}
                 onChange={(e) => setAnswerText(e.target.value)}
-                rows={4}
+                rows={8}
                 placeholder="Write your answer…"
                 className="w-full rounded-sm border border-rule bg-paper px-2 py-1.5 text-sm text-ink"
               />
@@ -421,6 +423,7 @@ function QuestionCard({
                 </div>
               )}
               <p className="font-data text-xs text-ink-soft">
+                {question.submission.textAnswer && `${countWords(question.submission.textAnswer)} words · `}
                 Submitted {new Date(question.submission.submittedAt).toLocaleString()}
               </p>
               {question.submission.mentorFeedback && !isMentor && (

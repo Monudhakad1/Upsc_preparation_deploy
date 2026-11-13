@@ -5,6 +5,7 @@ import { DashboardSkeleton } from "@/components/Skeleton";
 import { paperLabel } from "@/lib/format";
 import Link from "next/link";
 import { TodayPanel } from "@/components/TodayPanel";
+import { RevisionDuePanel } from "@/components/RevisionDuePanel";
 import { useAuth } from "@/lib/auth-context";
 import { dashboardApi, goalApi, questionApi, ApiError, prefetch } from "@/lib/api";
 import type { DashboardOverview, GoalStats, PriorityLists, PriorityTopic, PyqCoverage } from "@/types/syllabus";
@@ -16,6 +17,8 @@ export function DashboardAnalytics() {
   const [pyqCoverage, setPyqCoverage] = useState<PyqCoverage[] | null>(null);
   const [goalStats, setGoalStats] = useState<GoalStats | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Bumped after a write (e.g. a revision logged) to refetch everything.
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     if (!token) return;
@@ -36,12 +39,12 @@ export function DashboardAnalytics() {
         setGoalStats(gs);
         // Dashboard is ready - quietly load the other pages' data so opening
         // Syllabus / Goals / Questions / PYQs next is instant.
-        prefetch(token);
+        if (reloadKey === 0) prefetch(token);
       })
       .catch((err) =>
         setError(err instanceof ApiError ? err.message : "Couldn't load the dashboard.")
       );
-  }, [token]);
+  }, [token, reloadKey]);
 
   if (error) {
     return (
@@ -59,6 +62,8 @@ export function DashboardAnalytics() {
   return (
     <div className="space-y-8">
       <TodayPanel neverRevisedCount={priorities.critical.length} />
+
+      <RevisionDuePanel priorities={priorities} onRevised={() => setReloadKey((k) => k + 1)} />
 
       {/* Daily goals - today / week / month */}
       {goalStats && (
