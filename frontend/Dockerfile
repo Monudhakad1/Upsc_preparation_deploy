@@ -12,6 +12,7 @@ COPY . .
 # NEXT_PUBLIC_* values are baked into the client bundle at build time.
 ARG NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
 ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL \
+    NEXT_OUTPUT_STANDALONE=1 \
     NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
