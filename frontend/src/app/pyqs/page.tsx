@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { paperLabel } from "@/lib/format";
 import { RequireAuth } from "@/components/RequireAuth";
 import { AppShell } from "@/components/AppShell";
 import { TopicPicker, flattenTopics, type FlatTopic } from "@/components/TopicPicker";
@@ -73,7 +74,7 @@ function PyqExplorer() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <div>
-          <h1 className="font-display text-3xl font-semibold text-ink">PYQs</h1>
+          <h1 className="text-2xl font-semibold text-ink">PYQs</h1>
           <p className="mt-1 text-ink-soft">
             {summary ? `${summary.total} logged · ${summary.attempted} attempted` : "Loading…"}
           </p>
@@ -97,7 +98,7 @@ function PyqExplorer() {
           <option value="">All papers</option>
           {papers.map((p) => (
             <option key={p.id} value={p.id}>
-              {p.code}
+              {paperLabel(p.code)}
             </option>
           ))}
         </select>
@@ -209,7 +210,7 @@ function AddPyqForm({
             <option value="">Select…</option>
             {papers.map((p) => (
               <option key={p.id} value={p.id}>
-                {p.code}
+                {paperLabel(p.code)}
               </option>
             ))}
           </select>
@@ -334,7 +335,7 @@ function PyqCard({
       >
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <span className="font-data text-ink-soft">
-            {pyq.paperCode} · {pyq.year}
+            {paperLabel(pyq.paperCode)} · {pyq.year}
             {pyq.marks ? ` · ${pyq.marks}m` : ""}
           </span>
           <span className={`font-medium ${STATUS_COLOR[pyq.attemptStatus]}`}>

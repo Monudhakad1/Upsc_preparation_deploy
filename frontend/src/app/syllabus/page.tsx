@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { paperLabel } from "@/lib/format";
 import { RequireAuth } from "@/components/RequireAuth";
 import { AppShell } from "@/components/AppShell";
 import { StatusDot } from "@/components/StatusDot";
@@ -122,7 +123,7 @@ function SyllabusExplorer() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <div>
-          <h1 className="font-display text-3xl font-semibold text-ink">Syllabus</h1>
+          <h1 className="text-2xl font-semibold text-ink">Syllabus</h1>
           <p className="mt-1 text-ink-soft">
             {papers.length} papers · {totalTopics} topics · {completedCount} completed.{" "}
             {canEdit ? "Click a topic to mark progress and log revisions." : "Read-only mentor view."}
@@ -151,7 +152,7 @@ function SyllabusExplorer() {
             }
             title={STAGE_LABELS[paper.examStage]}
           >
-            {paper.code}
+            {paperLabel(paper.code)}
           </button>
         ))}
       </div>
@@ -161,7 +162,7 @@ function SyllabusExplorer() {
           <p className="font-data text-xs uppercase tracking-wide text-ink-soft">
             {STAGE_LABELS[activePaper.examStage]}
           </p>
-          <h2 className="mt-1 font-display text-xl font-semibold text-ink">
+          <h2 className="mt-1 text-lg font-semibold text-ink">
             {activePaper.name}
           </h2>
 

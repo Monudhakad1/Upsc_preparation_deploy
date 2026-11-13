@@ -21,7 +21,7 @@ function AspirantDashboardContent() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-display text-3xl font-semibold text-ink">
+        <h1 className="text-2xl font-semibold text-ink">
           Welcome back, {user?.displayName}
         </h1>
         <p className="mt-1 text-ink-soft">Here&rsquo;s where your preparation actually stands.</p>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { paperLabel } from "@/lib/format";
 import type { TopicRef } from "@/types/syllabus";
 
 export interface FlatTopic extends TopicRef {
@@ -52,7 +53,7 @@ export function TopicPicker({
                 onClick={() => pick(t)}
                 className="block w-full px-2 py-1.5 text-left text-xs text-ink hover:bg-brand-soft"
               >
-                {t.name} <span className="text-ink-soft">· {t.paperCode} / {t.areaName}</span>
+                {t.name} <span className="text-ink-soft">· {paperLabel(t.paperCode)} / {t.areaName}</span>
               </button>
             </li>
           ))}

@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import { paperLabel } from "@/lib/format";
 import { RequireAuth } from "@/components/RequireAuth";
 import { AppShell } from "@/components/AppShell";
 import { TopicPicker, flattenTopics, type FlatTopic } from "@/components/TopicPicker";
@@ -70,7 +71,7 @@ function QuestionsExplorer() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <div>
-          <h1 className="font-display text-3xl font-semibold text-ink">
+          <h1 className="text-2xl font-semibold text-ink">
             {isMentor ? "Assigned Questions" : "Today's Questions"}
           </h1>
           <p className="mt-1 text-ink-soft">
@@ -228,7 +229,7 @@ function AssignQuestionForm({
           <select name="paperId" defaultValue="" className="mt-1 w-full rounded-sm border border-rule bg-paper px-2 py-1.5 text-sm text-ink">
             <option value="">—</option>
             {papers.map((p) => (
-              <option key={p.id} value={p.id}>{p.code}</option>
+              <option key={p.id} value={p.id}>{paperLabel(p.code)}</option>
             ))}
           </select>
         </label>

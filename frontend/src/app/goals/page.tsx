@@ -80,7 +80,7 @@ function GoalsExplorer() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <div>
-          <h1 className="font-display text-3xl font-semibold text-ink">Daily Goals</h1>
+          <h1 className="text-2xl font-semibold text-ink">Daily Goals</h1>
           <p className="mt-1 text-ink-soft">
             Today: {todayCompleted}/{todayTotal} completed
           </p>

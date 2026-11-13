@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { paperLabel } from "@/lib/format";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { dashboardApi, ApiError } from "@/lib/api";
@@ -52,7 +53,7 @@ export function DashboardAnalytics() {
       {goalStats && (
         <section>
           <div className="flex items-center justify-between">
-            <h2 className="font-display text-xl font-semibold text-ink">Daily Goals</h2>
+            <h2 className="text-lg font-semibold text-ink">Daily Goals</h2>
             <Link href="/goals" className="text-xs text-brand hover:underline">
               View all →
             </Link>
@@ -67,12 +68,13 @@ export function DashboardAnalytics() {
 
       {/* Where Do I Stand? */}
       <section>
-        <h2 className="font-display text-xl font-semibold text-ink">Where Do I Stand?</h2>
+        <h2 className="text-lg font-semibold text-ink">Where Do I Stand?</h2>
         <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <StatCard
             label="Syllabus Coverage"
             value={`${overview.syllabusCoveragePercent}%`}
             detail={`${overview.completedTopics} of ${overview.totalTopics} topics completed`}
+            percent={overview.syllabusCoveragePercent}
           />
           <div className="rounded-sm border border-rule bg-paper-raised p-4">
             <p className="font-data text-xs uppercase tracking-wide text-ink-soft">Revision Depth</p>
@@ -96,7 +98,7 @@ export function DashboardAnalytics() {
             {overview.subjects.map((s) => (
               <div key={s.paperId}>
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-medium text-ink">{s.paperCode}</span>
+                  <span className="font-medium text-ink">{paperLabel(s.paperCode)}</span>
                   <span className="text-ink-soft">
                     {s.completedTopics}/{s.totalTopics} · {s.coveragePercent}%
                   </span>
@@ -119,7 +121,7 @@ export function DashboardAnalytics() {
               {pyqCoverage.map((c) => (
                 <div key={c.paperId}>
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-medium text-ink">{c.paperCode}</span>
+                    <span className="font-medium text-ink">{paperLabel(c.paperCode)}</span>
                     <span className="text-ink-soft">
                       {c.attemptedPyqs}/{c.totalPyqs} attempted · {c.coveragePercent}%
                     </span>
@@ -139,7 +141,7 @@ export function DashboardAnalytics() {
 
       {/* What Should I Do Next? */}
       <section>
-        <h2 className="font-display text-xl font-semibold text-ink">What Should I Do Next?</h2>
+        <h2 className="text-lg font-semibold text-ink">What Should I Do Next?</h2>
 
         {hasNoCompletedTopics ? (
           <p className="mt-2 text-sm text-ink-soft">
@@ -184,12 +186,30 @@ export function DashboardAnalytics() {
   );
 }
 
-function StatCard({ label, value, detail }: { label: string; value: string; detail: string }) {
+function StatCard({
+  label,
+  value,
+  detail,
+  percent,
+}: {
+  label: string;
+  value: string;
+  detail: string;
+  percent: number;
+}) {
   return (
-    <div className="rounded-sm border border-rule bg-paper-raised p-4">
+    <div className="flex flex-col rounded-sm border border-rule bg-paper-raised p-4">
       <p className="font-data text-xs uppercase tracking-wide text-ink-soft">{label}</p>
       <p className="mt-1 font-display text-4xl font-semibold text-ink">{value}</p>
       <p className="mt-1 text-xs text-ink-soft">{detail}</p>
+      <div className="mt-auto pt-6">
+        <div className="h-2 w-full rounded-full bg-rule">
+          <div
+            className="h-2 rounded-full bg-status-completed"
+            style={{ width: `${Math.min(percent, 100)}%` }}
+          />
+        </div>
+      </div>
     </div>
   );
 }
@@ -243,16 +263,21 @@ function PriorityGroup({
   const style = TONE_STYLES[tone];
 
   const content = (
-    <ul className="mt-2 space-y-1.5">
+    <ul
+      className={
+        "mt-2 divide-y divide-rule overflow-hidden " +
+        (collapsible ? "" : "rounded-sm border border-rule bg-paper-raised")
+      }
+    >
       {items.slice(0, 8).map((item) => (
         <li
           key={item.topicId}
-          className="flex flex-wrap items-center gap-x-2 gap-y-0.5 rounded-sm border border-rule bg-paper-raised px-3 py-1.5 text-xs"
+          className="flex flex-wrap items-center gap-x-2 gap-y-0.5 px-3 py-2 text-xs"
         >
           <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${style.dot}`} />
           <span className="font-medium text-ink">{item.topicName}</span>
           <span className="text-ink-soft">
-            {item.paperCode} · {item.areaName}
+            {paperLabel(item.paperCode)} · {item.areaName}
           </span>
           <span className={`ml-auto font-data ${style.badge}`}>
             {item.revisionCount} rev{item.revisionCount === 1 ? "" : "s"}
@@ -261,7 +286,7 @@ function PriorityGroup({
         </li>
       ))}
       {items.length > 8 && (
-        <li className="px-1 text-xs text-ink-soft">+ {items.length - 8} more</li>
+        <li className="px-3 py-2 text-xs text-ink-soft">+ {items.length - 8} more</li>
       )}
     </ul>
   );

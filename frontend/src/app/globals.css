@@ -1,27 +1,25 @@
 @import "tailwindcss";
 
 :root {
-  /* Paper/ledger surface */
-  --color-paper: #f6f3ec;
-  --color-paper-raised: #fffdf9;
-  --color-ink: #23241f;
-  --color-ink-soft: #63625a;
-  --color-rule: #ddd6c5;
+  /* Neutral surfaces: light-gray canvas, white cards, slate text. */
+  --color-paper: #f6f7f9;
+  --color-paper-raised: #ffffff;
+  --color-ink: #0f172a;
+  --color-ink-soft: #64748b;
+  --color-rule: #e2e8f0;
 
-  /* Brand ink - the "mentor's fountain pen" accent used for primary actions.
-     Deliberately NOT one of the status colors below, which are reserved
-     and meaningful (spec section 29). */
-  --color-brand: #1f3d3a;
-  --color-brand-soft: #e4ede9;
+  /* Brand accent for primary actions. Deliberately NOT one of the status
+     colors below, which are reserved and meaningful (spec section 29). */
+  --color-brand: #1e293b;
+  --color-brand-soft: #f1f5f9;
 
-  /* Reserved status vocabulary - used from Phase 3 onward for syllabus/
-     revision status. Defined here so every later phase pulls from the
-     same five colors instead of improvising new ones. */
-  --color-status-completed: #2f6f4e;
-  --color-status-progress: #b8862e;
-  --color-status-critical: #b33a2e;
-  --color-status-revision: #2e5fa3;
-  --color-status-notstarted: #8a897f;
+  /* Reserved status vocabulary - green = completed, amber = in progress,
+     red = pending/critical, blue = revision, grey = not started. */
+  --color-status-completed: #16a34a;
+  --color-status-progress: #d97706;
+  --color-status-critical: #dc2626;
+  --color-status-revision: #2563eb;
+  --color-status-notstarted: #94a3b8;
 }
 
 @theme inline {
@@ -38,27 +36,52 @@
   --color-status-revision: var(--color-status-revision);
   --color-status-notstarted: var(--color-status-notstarted);
 
-  --font-display: var(--font-display);
-  --font-body: var(--font-body);
-  --font-data: var(--font-data);
-}
+  /* One clean sans family everywhere; "data" text just uses tabular numbers. */
+  --font-display: var(--font-inter), ui-sans-serif, system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-body: var(--font-inter), ui-sans-serif, system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-data: var(--font-inter), ui-sans-serif, system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
 
-/* System-font stacks (no external font fetch at build time - see README for
-   swapping in real webfonts like Source Serif 4 / IBM Plex once deployed
-   somewhere with unrestricted network access, e.g. Vercel). */
-:root {
-  --font-display: ui-serif, Georgia, "Times New Roman", serif;
-  --font-body: ui-sans-serif, system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
-  --font-data: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+  /* Slightly softer corners on every card, input and button that uses rounded-sm. */
+  --radius-sm: 0.5rem;
 }
 
 body {
   background: var(--color-paper);
   color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  letter-spacing: -0.015em;
+}
+
+.font-data {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Inputs, selects and textareas: consistent, calm focus state. */
+input,
+select,
+textarea {
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--color-ink-soft);
+  box-shadow: 0 0 0 3px rgb(15 23 42 / 0.06);
+}
+
+/* Cards (white surfaces with a border) get a barely-there shadow for depth. */
+.bg-paper-raised.border {
+  box-shadow: 0 1px 2px rgb(15 23 42 / 0.04);
 }
 
 /* Keyboard focus must stay visible everywhere - this is a daily-use tool. */
 :focus-visible {
-  outline: 2px solid var(--color-brand);
+  outline: 2px solid var(--color-status-revision);
   outline-offset: 2px;
 }
