@@ -64,6 +64,10 @@ npm run dev
 | `SEED_MENTOR_*` / `SEED_ASPIRANT_*` | EMAIL / PASSWORD / NAME of the two accounts |
 | `DB_POOL_SIZE` | Optional, Hikari pool size (default 5) |
 | `JPA_DDL_AUTO` | Optional, `validate` locally (default), `none` in the Docker image |
+| `APP_TIMEZONE` | Optional, default `Asia/Kolkata` — defines "today" for goals/revisions |
+
+**Exam countdown dates** (dashboard) live in `frontend/src/lib/exam.ts` — update them
+from the official UPSC calendar each year.
 
 ### Frontend (`frontend/.env.example`)
 

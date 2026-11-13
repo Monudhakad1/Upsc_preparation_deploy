@@ -64,7 +64,9 @@ public class SecurityConfig {
             .exceptionHandling(eh -> eh.authenticationEntryPoint(
                     new HttpStatusEntryPoint(org.springframework.http.HttpStatus.UNAUTHORIZED)))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll()
+                // Only login is public - /api/auth/me needs a valid token (it used to
+                // NPE into a 500 for invalid tokens instead of returning 401).
+                .requestMatchers("/api/auth/login").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
                 .anyRequest().authenticated()
             )

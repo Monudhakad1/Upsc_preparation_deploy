@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import { formatDate } from "@/lib/format";
 import { useAuth } from "@/lib/auth-context";
 import { topicProgressApi, ApiError } from "@/lib/api";
 import type { TopicProgressDetail, TopicStatus } from "@/types/syllabus";
@@ -183,7 +184,7 @@ export function TopicDetailPanel({
                 className="flex items-center justify-between rounded-sm border border-rule bg-paper-raised px-3 py-1.5 text-xs"
               >
                 <span className="font-data text-status-revision">R{rev.revisionNumber}</span>
-                <span className="text-ink-soft">{rev.revisionDate}</span>
+                <span className="text-ink-soft">{formatDate(rev.revisionDate)}</span>
                 {rev.confidence && (
                   <span className="text-ink-soft">confidence {rev.confidence}/5</span>
                 )}

@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { formatDate, todayISO } from "@/lib/format";
 import { RequireAuth } from "@/components/RequireAuth";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/lib/auth-context";
@@ -35,7 +36,7 @@ const STATUS_COLOR: Record<GoalStatus, string> = {
 };
 
 function todayStr() {
-  return new Date().toISOString().slice(0, 10);
+  return todayISO();
 }
 
 export default function GoalsPage() {
@@ -303,7 +304,7 @@ function GoalCard({
     <div className="rounded-sm border border-rule bg-paper-raised p-4">
       <div className="flex flex-wrap items-center gap-2 text-xs">
         <span className="font-data text-ink-soft">{CATEGORY_LABEL[goal.category]}</span>
-        <span className="text-ink-soft">· {goal.goalDate}</span>
+        <span className="text-ink-soft">· {formatDate(goal.goalDate)}</span>
         <span className={`font-medium ${STATUS_COLOR[goal.status]}`}>{STATUS_LABEL[goal.status]}</span>
         {goal.priority === "HIGH" && <span className="text-status-critical">high priority</span>}
       </div>

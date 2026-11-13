@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { paperLabel } from "@/lib/format";
+import { formatDate, paperLabel, todayISO } from "@/lib/format";
 import { RequireAuth } from "@/components/RequireAuth";
 import { AppShell } from "@/components/AppShell";
 import { TopicPicker, flattenTopics, type FlatTopic } from "@/components/TopicPicker";
@@ -64,7 +64,7 @@ function QuestionsExplorer() {
   useEffect(reload, [token]);
 
   const pendingCount = questions?.filter((q) => !q.submission).length ?? 0;
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayISO();
   const overdue = questions?.filter((q) => !q.submission && q.deadline && q.deadline < today).length ?? 0;
 
   return (
@@ -344,10 +344,10 @@ function QuestionCard({
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <span className="font-data text-ink-soft">{TYPE_LABEL[question.type]}</span>
           {question.marks && <span className="font-data text-ink-soft">· {question.marks}m</span>}
-          <span className={`font-medium ${PRIORITY_COLOR[question.priority]}`}>{question.priority}</span>
+          <span className={`font-medium ${PRIORITY_COLOR[question.priority]}`}>{question.priority.charAt(0) + question.priority.slice(1).toLowerCase()} priority</span>
           {question.deadline && (
             <span className={isOverdue ? "text-status-critical" : "text-ink-soft"}>
-              due {question.deadline}
+              due {formatDate(question.deadline)}
               {isOverdue ? " (overdue)" : ""}
             </span>
           )}
@@ -358,7 +358,7 @@ function QuestionCard({
         </div>
         <p className="text-sm text-ink">{question.question}</p>
         {(question.topicName || question.paperCode) && (
-          <span className="text-xs text-ink-soft">{question.topicName ?? question.paperCode}</span>
+          <span className="text-xs text-ink-soft">{question.topicName ?? paperLabel(question.paperCode)}</span>
         )}
       </button>
 

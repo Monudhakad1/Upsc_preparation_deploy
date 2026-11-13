@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { paperLabel } from "@/lib/format";
 import Link from "next/link";
+import { TodayPanel } from "@/components/TodayPanel";
 import { useAuth } from "@/lib/auth-context";
 import { dashboardApi, ApiError } from "@/lib/api";
 import type { DashboardOverview, GoalStats, PriorityLists, PriorityTopic, PyqCoverage } from "@/types/syllabus";
@@ -49,6 +50,8 @@ export function DashboardAnalytics() {
 
   return (
     <div className="space-y-8">
+      <TodayPanel neverRevisedCount={priorities.critical.length} />
+
       {/* Daily goals - today / week / month */}
       {goalStats && (
         <section>
@@ -280,8 +283,8 @@ function PriorityGroup({
             {paperLabel(item.paperCode)} · {item.areaName}
           </span>
           <span className={`ml-auto font-data ${style.badge}`}>
-            {item.revisionCount} rev{item.revisionCount === 1 ? "" : "s"}
-            {item.confidence ? ` · conf ${item.confidence}/5` : ""}
+            {item.revisionCount === 0 ? "Not revised" : `R${item.revisionCount} done`}
+            {item.confidence ? ` · confidence ${item.confidence}/5` : ""}
           </span>
         </li>
       ))}
