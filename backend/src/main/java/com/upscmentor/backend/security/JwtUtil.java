@@ -56,10 +56,18 @@ public class JwtUtil {
     }
 
     public boolean isTokenValid(String token) {
+        return parseValidClaims(token) != null;
+    }
+
+    /**
+     * Verifies signature + expiry in a single parse. Returns null for any
+     * invalid/expired/malformed token (jjwt rejects expired tokens itself).
+     */
+    public Claims parseValidClaims(String token) {
         try {
-            return !extractClaim(token, Claims::getExpiration).before(new Date());
+            return Jwts.parser().verifyWith(signingKey).build().parseSignedClaims(token).getPayload();
         } catch (Exception e) {
-            return false;
+            return null;
         }
     }
 

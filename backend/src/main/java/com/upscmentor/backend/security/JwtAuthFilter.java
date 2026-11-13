@@ -1,5 +1,6 @@
 package com.upscmentor.backend.security;
 
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -40,9 +41,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         String token = header.substring(PREFIX.length());
 
-        if (jwtUtil.isTokenValid(token) && SecurityContextHolder.getContext().getAuthentication() == null) {
+        Claims claims = jwtUtil.parseValidClaims(token);
+        if (claims != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
-                String email = jwtUtil.extractEmail(token);
+                String email = claims.get("email", String.class);
                 UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
                 UsernamePasswordAuthenticationToken authToken =

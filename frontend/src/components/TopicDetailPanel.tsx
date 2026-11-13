@@ -84,8 +84,10 @@ export function TopicDetailPanel({
       );
       setDetail(updated);
       onChange(updated);
+      // Closing the form unmounts it, so no reset is needed. (Calling
+      // e.currentTarget.reset() here threw - currentTarget is null after an await -
+      // which showed an error even though the revision had been saved.)
       setShowRevisionForm(false);
-      e.currentTarget.reset();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Couldn't add that revision.");
     } finally {

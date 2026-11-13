@@ -2,21 +2,47 @@ spring:
   application:
     name: upsc-mentor-backend
 
+  # Picks up backend/.env automatically when running locally (mvnw spring-boot:run
+  # or the IDE). Real environment variables still win; missing file is ignored.
+  config:
+    import: optional:file:.env[.properties]
+
+  # Java 21 virtual threads: cheap request threads, lower memory than a big Tomcat pool.
+  threads:
+    virtual:
+      enabled: true
+
   datasource:
     url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/upsc_mentor}
-    username: ${DATABASE_USERNAME:db}
-    password: ${DATABASE_PASSWORD:pass}
+    username: ${DATABASE_USERNAME:postgres}
+    password: ${DATABASE_PASSWORD:postgres}
+    hikari:
+      # Two-user app: a small pool keeps memory + DB connections low (free-tier friendly).
+      maximum-pool-size: ${DB_POOL_SIZE:5}
+      minimum-idle: 1
+      idle-timeout: 300000
+      connection-timeout: 20000
 
   jpa:
     hibernate:
       # Flyway migrations are the source of truth for schema (spec section 31).
       # 'validate' catches entity/schema drift at boot instead of silently
       # auto-altering a production table.
-      ddl-auto: validate
+      # The Docker image sets JPA_DDL_AUTO=none: skipping validation saves a full
+      # schema-metadata scan of the remote DB on every (cold) start.
+      ddl-auto: ${JPA_DDL_AUTO:validate}
     open-in-view: false
     properties:
       hibernate:
         format_sql: false
+        # Loads lazy collections (e.g. PYQ -> topics) in batches instead of 1 query per row.
+        default_batch_fetch_size: 64
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+        order_updates: true
+        query:
+          in_clause_parameter_padding: true
 
   flyway:
     enabled: true
@@ -29,6 +55,21 @@ spring:
 
 server:
   port: ${PORT:8080}
+  shutdown: graceful
+  # gzip JSON responses - the full syllabus tree shrinks ~10x over the wire.
+  compression:
+    enabled: true
+    mime-types: application/json,text/plain
+    min-response-size: 2048
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
 
 app:
   jwt:

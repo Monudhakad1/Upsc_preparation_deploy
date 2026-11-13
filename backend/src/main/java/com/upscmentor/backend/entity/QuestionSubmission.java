@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
@@ -11,6 +12,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "question_submissions")
+@DynamicUpdate // feedback edits must not rewrite the (up to 15MB) file_data column
 @Getter
 @Setter
 public class QuestionSubmission {

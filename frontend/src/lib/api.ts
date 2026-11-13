@@ -30,6 +30,24 @@ export class ApiError extends Error {
   }
 }
 
+// Set by AuthProvider: an expired/invalid token on any authed call signs the user out.
+let unauthorizedHandler: (() => void) | null = null;
+export function setUnauthorizedHandler(handler: (() => void) | null) {
+  unauthorizedHandler = handler;
+}
+
+async function toApiError(res: Response, authed: boolean): Promise<ApiError> {
+  if (res.status === 401 && authed) unauthorizedHandler?.();
+  let message = `Request failed (${res.status})`;
+  try {
+    const body = await res.json();
+    if (body?.message) message = body.message;
+  } catch {
+    // response wasn't JSON - fall back to the generic message above
+  }
+  return new ApiError(res.status, message);
+}
+
 /**
  * Thin fetch wrapper. Every later phase (syllabus, revisions, PYQs, goals, ...)
  * reuses this instead of calling fetch() directly, so auth headers and error
@@ -50,16 +68,7 @@ async function request<T>(
     },
   });
 
-  if (!res.ok) {
-    let message = `Request failed (${res.status})`;
-    try {
-      const body = await res.json();
-      if (body?.message) message = body.message;
-    } catch {
-      // response wasn't JSON - fall back to the generic message above
-    }
-    throw new ApiError(res.status, message);
-  }
+  if (!res.ok) throw await toApiError(res, !!token);
 
   // 204 No Content etc.
   if (res.status === 204) return undefined as T;
@@ -78,16 +87,7 @@ async function requestMultipart<T>(
     body: formData,
   });
 
-  if (!res.ok) {
-    let message = `Request failed (${res.status})`;
-    try {
-      const body = await res.json();
-      if (body?.message) message = body.message;
-    } catch {
-      // ignore
-    }
-    throw new ApiError(res.status, message);
-  }
+  if (!res.ok) throw await toApiError(res, !!token);
   return res.json() as Promise<T>;
 }
 
@@ -96,7 +96,10 @@ async function requestBlob(path: string, token: string | null): Promise<Blob> {
   const res = await fetch(`${API_BASE_URL}${path}`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
-  if (!res.ok) throw new ApiError(res.status, `Couldn't download the file (${res.status})`);
+  if (!res.ok) {
+    if (res.status === 401) unauthorizedHandler?.();
+    throw new ApiError(res.status, `Couldn't download the file (${res.status})`);
+  }
   return res.blob();
 }
 
@@ -109,10 +112,34 @@ export const authApi = {
 
   me: (token: string) =>
     request<AuthUser>("/api/auth/me", { token }),
+
+  /**
+   * Fire-and-forget wake-up call. On Render's free tier the backend sleeps when
+   * idle; pinging it as soon as the login page opens means it is (mostly) booted
+   * by the time the user has typed their password.
+   */
+  wakeUp: () => {
+    fetch(`${API_BASE_URL}/actuator/health`, { cache: "no-store" }).catch(() => {});
+  },
 };
 
+// The syllabus tree is static seed data - fetch it once per session and share
+// it across the Syllabus, PYQs and Questions pages instead of refetching each time.
+let syllabusTreeCache: Promise<Paper[]> | null = null;
+export function clearSyllabusCache() {
+  syllabusTreeCache = null;
+}
+
 export const syllabusApi = {
-  getTree: (token: string) => request<Paper[]>("/api/syllabus", { token }),
+  getTree: (token: string) => {
+    if (!syllabusTreeCache) {
+      syllabusTreeCache = request<Paper[]>("/api/syllabus", { token }).catch((err) => {
+        syllabusTreeCache = null; // don't cache failures
+        throw err;
+      });
+    }
+    return syllabusTreeCache;
+  },
   getProgressSummary: (token: string) =>
     request<TopicProgressSummary[]>("/api/syllabus/progress", { token }),
 };

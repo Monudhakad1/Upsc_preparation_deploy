@@ -1,0 +1,48 @@
+# One-command local stack:  docker compose up --build
+# Then open http://localhost:3000 and sign in with the SEED_* accounts below.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: upsc_mentor
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d upsc_mentor"]
+      interval: 3s
+      retries: 20
+
+  backend:
+    build: ./backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: jdbc:postgresql://db:5432/upsc_mentor
+      DATABASE_USERNAME: postgres
+      DATABASE_PASSWORD: postgres
+      APP_JWT_SECRET: ${APP_JWT_SECRET:-local-dev-secret-change-me-local-dev-secret-change-me}
+      APP_CORS_ALLOWED_ORIGINS: http://localhost:3000
+      SEED_MENTOR_EMAIL: ${SEED_MENTOR_EMAIL:-mentor@example.com}
+      SEED_MENTOR_PASSWORD: ${SEED_MENTOR_PASSWORD:-mentor123}
+      SEED_ASPIRANT_EMAIL: ${SEED_ASPIRANT_EMAIL:-aspirant@example.com}
+      SEED_ASPIRANT_PASSWORD: ${SEED_ASPIRANT_PASSWORD:-aspirant123}
+    ports:
+      - "8080:8080"
+    mem_limit: 512m
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_BASE_URL: http://localhost:8080
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+    mem_limit: 256m
+
+volumes:
+  pgdata:

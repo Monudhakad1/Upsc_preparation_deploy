@@ -47,20 +47,16 @@ public class TopicProgressService {
     @Transactional(readOnly = true)
     public List<TopicProgressSummaryDto> getAllSummaries(UUID aspirantId) {
         List<TopicProgress> rows = topicProgressRepository.findAllByAspirantId(aspirantId);
+        if (rows.isEmpty()) return List.of();
 
+        // Two aggregate queries total, instead of one revision query per topic (N+1).
         Map<UUID, Integer> revisionCounts = new HashMap<>();
-        Map<UUID, LocalDate> lastRevisionDates = new HashMap<>();
         for (Object[] row : revisionRepository.countAllByAspirantId(aspirantId)) {
             revisionCounts.put((UUID) row[0], ((Long) row[1]).intValue());
         }
-        // Last revision date needs the actual rows, not just a count - one extra
-        // pass per topic_progress is fine at this data volume (a few hundred at most).
-        for (TopicProgress tp : rows) {
-            List<com.upscmentor.backend.entity.Revision> revs =
-                    revisionRepository.findAllByTopicProgressIdOrderByRevisionNumber(tp.getId());
-            if (!revs.isEmpty()) {
-                lastRevisionDates.put(tp.getId(), revs.get(revs.size() - 1).getRevisionDate());
-            }
+        Map<UUID, LocalDate> lastRevisionDates = new HashMap<>();
+        for (Object[] row : revisionRepository.maxRevisionDateByAspirantId(aspirantId)) {
+            lastRevisionDates.put((UUID) row[0], (LocalDate) row[1]);
         }
 
         return rows.stream()
