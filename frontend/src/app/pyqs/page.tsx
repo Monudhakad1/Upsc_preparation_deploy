@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { ListSkeleton } from "@/components/Skeleton";
 import { paperLabel } from "@/lib/format";
 import { RequireAuth } from "@/components/RequireAuth";
 import { AppShell } from "@/components/AppShell";
@@ -128,7 +129,7 @@ function PyqExplorer() {
       {error && <p className="text-sm text-status-critical">{error}</p>}
 
       {!pyqs ? (
-        <p className="font-data text-sm text-ink-soft">Loading…</p>
+        <ListSkeleton />
       ) : pyqs.length === 0 ? (
         <p className="text-sm text-ink-soft">
           No PYQs logged yet{canEdit ? " — add your first one above." : "."}

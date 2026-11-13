@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { ListSkeleton } from "@/components/Skeleton";
 import { formatDate, todayISO } from "@/lib/format";
 import { RequireAuth } from "@/components/RequireAuth";
 import { AppShell } from "@/components/AppShell";
@@ -133,7 +134,7 @@ function GoalsExplorer() {
       {error && <p className="text-sm text-status-critical">{error}</p>}
 
       {!goals ? (
-        <p className="font-data text-sm text-ink-soft">Loading…</p>
+        <ListSkeleton />
       ) : visibleGoals.length === 0 ? (
         <p className="text-sm text-ink-soft">
           {dateFilter === "today" ? "Nothing assigned for today." : "No goals yet."}

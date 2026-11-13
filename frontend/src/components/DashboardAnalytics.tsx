@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { DashboardSkeleton } from "@/components/Skeleton";
 import { paperLabel } from "@/lib/format";
 import Link from "next/link";
 import { TodayPanel } from "@/components/TodayPanel";
 import { useAuth } from "@/lib/auth-context";
-import { dashboardApi, ApiError } from "@/lib/api";
+import { dashboardApi, goalApi, questionApi, ApiError, prefetch } from "@/lib/api";
 import type { DashboardOverview, GoalStats, PriorityLists, PriorityTopic, PyqCoverage } from "@/types/syllabus";
 
 export function DashboardAnalytics() {
@@ -18,6 +19,10 @@ export function DashboardAnalytics() {
 
   useEffect(() => {
     if (!token) return;
+    // Kick off Today's-plan data in parallel (TodayPanel mounts later and reuses
+    // these in-flight requests via the API cache instead of waiting another trip).
+    goalApi.list(token).catch(() => {});
+    questionApi.list(token).catch(() => {});
     Promise.all([
       dashboardApi.getOverview(token),
       dashboardApi.getPriorities(token),
@@ -29,6 +34,9 @@ export function DashboardAnalytics() {
         setPriorities(p);
         setPyqCoverage(pc);
         setGoalStats(gs);
+        // Dashboard is ready - quietly load the other pages' data so opening
+        // Syllabus / Goals / Questions / PYQs next is instant.
+        prefetch(token);
       })
       .catch((err) =>
         setError(err instanceof ApiError ? err.message : "Couldn't load the dashboard.")
@@ -44,7 +52,7 @@ export function DashboardAnalytics() {
   }
 
   if (!overview || !priorities) {
-    return <p className="font-data text-sm text-ink-soft">Loading dashboard…</p>;
+    return <DashboardSkeleton />;
   }
   const hasNoCompletedTopics = overview.completedTopics === 0;
 
@@ -56,15 +64,15 @@ export function DashboardAnalytics() {
       {goalStats && (
         <section>
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-ink">Daily Goals</h2>
-            <Link href="/goals" className="text-xs text-brand hover:underline">
-              View all →
+            <h2 className="text-lg font-semibold text-ink">Goal completion</h2>
+            <Link href="/goals" className="text-xs text-ink-soft hover:text-ink hover:underline">
+              View all goals →
             </Link>
           </div>
-          <div className="mt-3 grid grid-cols-3 gap-3">
+          <div className="mt-3 grid grid-cols-3 divide-x divide-rule rounded-sm border border-rule bg-paper-raised">
             <GoalStatCard label="Today" completed={goalStats.todayCompleted} total={goalStats.todayTotal} />
-            <GoalStatCard label="This Week" completed={goalStats.weekCompleted} total={goalStats.weekTotal} />
-            <GoalStatCard label="This Month" completed={goalStats.monthCompleted} total={goalStats.monthTotal} />
+            <GoalStatCard label="This week" completed={goalStats.weekCompleted} total={goalStats.weekTotal} />
+            <GoalStatCard label="This month" completed={goalStats.monthCompleted} total={goalStats.monthTotal} />
           </div>
         </section>
       )}
@@ -220,10 +228,11 @@ function StatCard({
 function GoalStatCard({ label, completed, total }: { label: string; completed: number; total: number }) {
   const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
   return (
-    <div className="rounded-sm border border-rule bg-paper-raised p-4">
-      <p className="font-data text-xs uppercase tracking-wide text-ink-soft">{label}</p>
-      <p className="mt-1 font-display text-2xl font-semibold text-ink">
-        {completed}/{total}
+    <div className="p-4">
+      <p className="text-xs font-medium text-ink-soft">{label}</p>
+      <p className="mt-1 text-2xl font-semibold text-ink">
+        {completed}
+        <span className="text-base font-normal text-ink-soft">/{total}</span>
       </p>
       <div className="mt-2 h-1.5 w-full rounded-full bg-rule">
         <div className="h-1.5 rounded-full bg-status-completed" style={{ width: `${percent}%` }} />

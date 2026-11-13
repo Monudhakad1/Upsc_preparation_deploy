@@ -7,6 +7,10 @@ import com.upscmentor.backend.security.UserPrincipal;
 import com.upscmentor.backend.service.SyllabusService;
 import com.upscmentor.backend.service.TopicProgressService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.CacheControl;
+import org.springframework.http.ResponseEntity;
+
+import java.time.Duration;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,9 +33,20 @@ public class SyllabusController {
     private final TopicProgressService topicProgressService;
     private final AspirantContextResolver aspirantContextResolver;
 
+    // The tree is static seed data (changes only via a migration + redeploy), so
+    // it is built once and served from memory - no DB round trips per request.
+    private volatile List<PaperDto> cachedTree;
+
     @GetMapping
-    public List<PaperDto> getFullTree() {
-        return syllabusService.getFullTree();
+    public ResponseEntity<List<PaperDto>> getFullTree() {
+        List<PaperDto> tree = cachedTree;
+        if (tree == null) {
+            tree = syllabusService.getFullTree();
+            cachedTree = tree;
+        }
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.maxAge(Duration.ofHours(6)).cachePrivate())
+                .body(tree);
     }
 
     /** One call to color every topic's status dot, instead of 469 individual GETs. */

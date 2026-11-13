@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { ListSkeleton } from "@/components/Skeleton";
 import { paperLabel } from "@/lib/format";
 import { RequireAuth } from "@/components/RequireAuth";
 import { AppShell } from "@/components/AppShell";
@@ -116,7 +117,7 @@ function SyllabusExplorer() {
   }
 
   if (!papers) {
-    return <p className="font-data text-sm text-ink-soft">Loading syllabus…</p>;
+    return <ListSkeleton rows={6} />;
   }
 
   return (
@@ -178,9 +179,10 @@ function SyllabusExplorer() {
               >
                 <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-ink">
                   <span className="font-medium">{area.name}</span>
-                  <span className="font-data text-xs text-ink-soft">
-                    {area.topics.length} topics
-                  </span>
+                  <AreaProgress
+                    done={area.topics.filter((t) => statusFor(t.id) === "COMPLETED").length}
+                    total={area.topics.length}
+                  />
                 </summary>
                 <ul className="border-t border-rule">
                   {area.topics.map((topic) => {
@@ -227,5 +229,22 @@ function SyllabusExplorer() {
         </div>
       )}
     </div>
+  );
+}
+
+function AreaProgress({ done, total }: { done: number; total: number }) {
+  const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+  return (
+    <span className="flex shrink-0 items-center gap-2">
+      <span className="hidden h-1.5 w-20 rounded-full bg-rule sm:block">
+        <span
+          className="block h-1.5 rounded-full bg-status-completed"
+          style={{ width: `${percent}%` }}
+        />
+      </span>
+      <span className="font-data text-xs text-ink-soft">
+        {done}/{total}
+      </span>
+    </span>
   );
 }

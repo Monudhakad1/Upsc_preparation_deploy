@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import { ListSkeleton } from "@/components/Skeleton";
 import { formatDate, paperLabel, todayISO } from "@/lib/format";
 import { RequireAuth } from "@/components/RequireAuth";
 import { AppShell } from "@/components/AppShell";
@@ -104,7 +105,7 @@ function QuestionsExplorer() {
       {error && <p className="text-sm text-status-critical">{error}</p>}
 
       {!questions ? (
-        <p className="font-data text-sm text-ink-soft">Loading…</p>
+        <ListSkeleton />
       ) : questions.length === 0 ? (
         <p className="text-sm text-ink-soft">
           {isMentor ? "No questions assigned yet — assign one above." : "Nothing assigned yet."}

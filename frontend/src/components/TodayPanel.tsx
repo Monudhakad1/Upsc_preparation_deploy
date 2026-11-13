@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { goalApi, questionApi } from "@/lib/api";
 import { upcomingMilestones } from "@/lib/exam";
+import { Skeleton } from "@/components/Skeleton";
 import { formatDate, todayISO } from "@/lib/format";
 import type { DailyGoal, Question } from "@/types/syllabus";
 
@@ -75,7 +76,10 @@ export function TodayPanel({ neverRevisedCount }: { neverRevisedCount: number })
               )}
             </div>
             {goals === null ? (
-              <p className="mt-2 text-sm text-ink-soft">Loading…</p>
+              <div className="mt-3 space-y-2">
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+              </div>
             ) : todaysGoals.length === 0 ? (
               <p className="mt-2 text-sm text-ink-soft">
                 {isMentor ? "No targets set for today. " : "No targets from your mentor today. "}

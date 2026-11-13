@@ -53,7 +53,48 @@ async function toApiError(res: Response, authed: boolean): Promise<ApiError> {
  * reuses this instead of calling fetch() directly, so auth headers and error
  * handling stay in one place.
  */
+// --- Short-lived GET cache --------------------------------------------------
+// The backend is far away (~0.7s per round trip), so re-fetching the same data
+// every time a page mounts makes navigation feel slow. GET responses are kept
+// for a minute and concurrent identical GETs share one network call. Any
+// successful write (POST/PUT/DELETE) clears the cache so edits show up at once.
+const GET_CACHE_TTL_MS = 60_000;
+const getCache = new Map<string, { at: number; promise: Promise<unknown> }>();
+
+export function clearApiCache() {
+  getCache.clear();
+}
+
 async function request<T>(
+  path: string,
+  options: RequestInit & { token?: string | null } = {}
+): Promise<T> {
+  const method = (options.method ?? "GET").toUpperCase();
+  const cacheable = method === "GET" && !!options.token && path !== "/api/auth/me";
+  if (!cacheable) {
+    const result = await rawRequest<T>(path, options);
+    if (method !== "GET") clearApiCache();
+    return result;
+  }
+
+  const key = `${options.token}|${path}`;
+  const hit = getCache.get(key);
+  if (hit && Date.now() - hit.at < GET_CACHE_TTL_MS) return hit.promise as Promise<T>;
+
+  const promise = rawRequest<T>(path, options);
+  getCache.set(key, { at: Date.now(), promise });
+  promise.catch(() => getCache.delete(key)); // never cache failures
+  return promise;
+}
+
+/** Warm the cache for pages the user is likely to open next (fire-and-forget). */
+export function prefetch(token: string) {
+  const paths = ["/api/syllabus/progress", "/api/goals", "/api/questions", "/api/pyqs"];
+  paths.forEach((p) => request(p, { token }).catch(() => {}));
+  syllabusApi.getTree(token).catch(() => {});
+}
+
+async function rawRequest<T>(
   path: string,
   options: RequestInit & { token?: string | null } = {}
 ): Promise<T> {
@@ -88,6 +129,7 @@ async function requestMultipart<T>(
   });
 
   if (!res.ok) throw await toApiError(res, !!token);
+  clearApiCache(); // a submission changes question data
   return res.json() as Promise<T>;
 }
 
@@ -128,6 +170,7 @@ export const authApi = {
 let syllabusTreeCache: Promise<Paper[]> | null = null;
 export function clearSyllabusCache() {
   syllabusTreeCache = null;
+  clearApiCache();
 }
 
 export const syllabusApi = {
