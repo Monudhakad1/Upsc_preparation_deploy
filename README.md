@@ -36,7 +36,9 @@ cp .env.example .env      # edit values; .env is loaded automatically
 ./mvnw spring-boot:run    # Windows: mvnw.cmd spring-boot:run
 ```
 
-Flyway creates/updates the schema and `AccountSeeder` creates the two accounts on first boot.
+Flyway creates/updates the schema and `AccountSeeder` creates the first mentor (admin) and a demo aspirant on first boot.
+
+**Accounts:** aspirants sign up themselves at `/register`. Mentors are admins: the **Users** page lists every account, lets a mentor open any aspirant's dashboard (the "Viewing" switcher), deactivate accounts, and create new accounts - new mentor accounts can only be created there, never through public sign-up.
 Tests: `./mvnw verify`.
 
 **3. Frontend**
@@ -61,7 +63,7 @@ npm run dev
 | `APP_JWT_EXPIRATION_MS` | Token lifetime, default 24h |
 | `APP_CORS_ALLOWED_ORIGINS` | Comma-separated frontend origins (no trailing slash) |
 | `PORT` | Render sets this automatically; default 8080 |
-| `SEED_MENTOR_*` / `SEED_ASPIRANT_*` | EMAIL / PASSWORD / NAME of the two accounts |
+| `SEED_MENTOR_*` / `SEED_ASPIRANT_*` | EMAIL / PASSWORD / NAME of the first mentor + demo aspirant |
 | `DB_POOL_SIZE` | Optional, Hikari pool size (default 5) |
 | `JPA_DDL_AUTO` | Optional, `validate` locally (default), `none` in the Docker image |
 | `APP_TIMEZONE` | Optional, default `Asia/Kolkata` — defines "today" for goals/revisions |

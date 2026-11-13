@@ -15,3 +15,13 @@ export interface LoginApiResponse {
   displayName: string;
   role: Role;
 }
+
+/** Account row in the mentor's Users (admin) page - mirrors AdminUserDto.java. */
+export interface AdminUser {
+  id: string;
+  email: string;
+  displayName: string;
+  role: Role;
+  active: boolean;
+  createdAt: string;
+}

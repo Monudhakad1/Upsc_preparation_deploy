@@ -1,13 +1,45 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { adminApi } from "@/lib/api";
+import { Skeleton } from "@/components/Skeleton";
+import type { AdminUser } from "@/types/auth";
 
-export function AppShell({ children }: { children: React.ReactNode }) {
-  const { user, logout } = useAuth();
+/**
+ * @param requiresAspirant pages that show one aspirant's data (default). For a
+ *   mentor they only render once an aspirant is selected; the Users page opts out.
+ */
+export function AppShell({
+  children,
+  requiresAspirant = true,
+}: {
+  children: React.ReactNode;
+  requiresAspirant?: boolean;
+}) {
+  const { user, token, logout, viewing, setViewing } = useAuth();
   const pathname = usePathname();
   const isMentor = user?.role === "MENTOR";
+
+  // Mentor: every active aspirant, for the "Viewing" switcher.
+  const [aspirants, setAspirants] = useState<AdminUser[] | null>(null);
+  useEffect(() => {
+    if (!isMentor || !token) return;
+    adminApi
+      .listUsers(token)
+      .then((users) => setAspirants(users.filter((u) => u.role === "ASPIRANT" && u.active)))
+      .catch(() => setAspirants([]));
+  }, [isMentor, token]);
+
+  // Keep the selection valid: default to the first aspirant, drop a removed one.
+  useEffect(() => {
+    if (!isMentor || aspirants === null) return;
+    if (viewing && aspirants.some((a) => a.id === viewing.id)) return;
+    const first = aspirants[0];
+    setViewing(first ? { id: first.id, displayName: first.displayName } : null);
+  }, [isMentor, aspirants, viewing, setViewing]);
 
   const navItems = [
     { label: "Dashboard", href: isMentor ? "/mentor" : "/aspirant" },
@@ -15,6 +47,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     { label: "PYQs", href: "/pyqs" },
     { label: "Questions", href: "/questions" },
     { label: "Daily Goals", href: "/goals" },
+    ...(isMentor ? [{ label: "Users", href: "/admin" }] : []),
   ];
 
   const initials = (user?.displayName ?? "?")
@@ -23,6 +56,36 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     .join("")
     .slice(0, 2)
     .toUpperCase();
+
+  let content: React.ReactNode = children;
+  if (isMentor && requiresAspirant) {
+    if (aspirants === null || (aspirants.length > 0 && !viewing)) {
+      content = (
+        <div className="space-y-4" role="status" aria-label="Loading">
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-40" />
+        </div>
+      );
+    } else if (aspirants.length === 0) {
+      content = (
+        <div className="rounded-sm border border-rule bg-paper-raised p-8 text-center">
+          <h2 className="text-lg font-semibold text-ink">No aspirants yet</h2>
+          <p className="mt-1 text-sm text-ink-soft">
+            Aspirants can sign up themselves from the login page, or you can create an account for them.
+          </p>
+          <Link
+            href="/admin"
+            className="mt-4 inline-block rounded-sm bg-brand px-4 py-2 text-sm font-medium text-paper hover:opacity-90"
+          >
+            Manage users
+          </Link>
+        </div>
+      );
+    } else {
+      // Remount the page when the mentor switches aspirant, so it refetches.
+      content = <div key={viewing?.id}>{children}</div>;
+    }
+  }
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -68,7 +131,35 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
       </header>
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10">{children}</main>
+      {isMentor && requiresAspirant && aspirants && aspirants.length > 0 && (
+        <div className="border-b border-rule bg-brand-soft/60">
+          <div className="mx-auto flex max-w-6xl items-center gap-2 px-4 py-2 text-sm sm:px-6">
+            <label htmlFor="viewing-aspirant" className="shrink-0 text-ink-soft">
+              Viewing
+            </label>
+            <select
+              id="viewing-aspirant"
+              value={viewing?.id ?? ""}
+              onChange={(e) => {
+                const next = aspirants.find((a) => a.id === e.target.value);
+                if (next) setViewing({ id: next.id, displayName: next.displayName });
+              }}
+              className="min-w-0 max-w-xs rounded-sm border border-rule bg-paper-raised px-2 py-1 text-sm font-medium text-ink"
+            >
+              {aspirants.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.displayName} ({a.email})
+                </option>
+              ))}
+            </select>
+            <span className="hidden text-xs text-ink-soft sm:inline">
+              {aspirants.length} aspirant{aspirants.length === 1 ? "" : "s"}
+            </span>
+          </div>
+        </div>
+      )}
+
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10">{content}</main>
     </div>
   );
 }

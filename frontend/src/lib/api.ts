@@ -1,4 +1,4 @@
-import type { AuthUser, LoginApiResponse } from "@/types/auth";
+import type { AdminUser, AuthUser, LoginApiResponse, Role } from "@/types/auth";
 import type {
   AttemptStatus,
   DailyGoal,
@@ -65,6 +65,21 @@ export function clearApiCache() {
   getCache.clear();
 }
 
+// --- Mentor "viewing" aspirant -----------------------------------------------
+// A mentor is admin over every aspirant. The aspirant they are looking at is sent
+// on every call as X-Aspirant-Id; the backend ignores it for aspirant accounts.
+let viewingAspirantId: string | null = null;
+
+export function setViewingAspirantId(id: string | null) {
+  if (id === viewingAspirantId) return;
+  viewingAspirantId = id;
+  clearApiCache(); // cached data belongs to the previous aspirant
+}
+
+function scopeHeaders(): Record<string, string> {
+  return viewingAspirantId ? { "X-Aspirant-Id": viewingAspirantId } : {};
+}
+
 async function request<T>(
   path: string,
   options: RequestInit & { token?: string | null } = {}
@@ -77,7 +92,7 @@ async function request<T>(
     return result;
   }
 
-  const key = `${options.token}|${path}`;
+  const key = `${options.token}|${viewingAspirantId ?? ""}|${path}`;
   const hit = getCache.get(key);
   if (hit && Date.now() - hit.at < GET_CACHE_TTL_MS) return hit.promise as Promise<T>;
 
@@ -105,6 +120,7 @@ async function rawRequest<T>(
     headers: {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...scopeHeaders(),
       ...headers,
     },
   });
@@ -124,7 +140,7 @@ async function requestMultipart<T>(
 ): Promise<T> {
   const res = await fetch(`${API_BASE_URL}${path}`, {
     method: "POST",
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}), ...scopeHeaders() },
     body: formData,
   });
 
@@ -136,7 +152,7 @@ async function requestMultipart<T>(
 /** Downloads a binary attachment as a Blob, for rendering/opening in the browser. */
 async function requestBlob(path: string, token: string | null): Promise<Blob> {
   const res = await fetch(`${API_BASE_URL}${path}`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}), ...scopeHeaders() },
   });
   if (!res.ok) {
     if (res.status === 401) unauthorizedHandler?.();
@@ -150,6 +166,12 @@ export const authApi = {
     request<LoginApiResponse>("/api/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
+    }),
+
+  register: (displayName: string, email: string, password: string) =>
+    request<LoginApiResponse>("/api/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ displayName, email, password }),
     }),
 
   me: (token: string) =>
@@ -334,4 +356,20 @@ export const goalApi = {
 
   remove: (id: string, token: string) =>
     request<void>(`/api/goals/${id}`, { method: "DELETE", token }),
+};
+
+export const adminApi = {
+  listUsers: (token: string) => request<AdminUser[]>("/api/admin/users", { token }),
+
+  createUser: (
+    payload: { displayName: string; email: string; password: string; role: Role },
+    token: string
+  ) => request<AdminUser>("/api/admin/users", { method: "POST", token, body: JSON.stringify(payload) }),
+
+  setActive: (id: string, active: boolean, token: string) =>
+    request<AdminUser>(`/api/admin/users/${id}/active`, {
+      method: "PATCH",
+      token,
+      body: JSON.stringify({ active }),
+    }),
 };

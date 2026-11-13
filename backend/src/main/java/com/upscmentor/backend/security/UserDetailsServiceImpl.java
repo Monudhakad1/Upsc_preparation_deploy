@@ -41,4 +41,9 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         cache.put(key, new Entry(principal, now));
         return principal;
     }
+
+    /** Forget a cached account so a change (e.g. deactivation) applies on the next request. */
+    public void evict(String email) {
+        cache.remove(email.toLowerCase(Locale.ROOT));
+    }
 }

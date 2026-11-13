@@ -16,7 +16,7 @@ export default function MentorDashboardPage() {
 }
 
 function MentorDashboardContent() {
-  const { user } = useAuth();
+  const { user, viewing } = useAuth();
 
   return (
     <div className="space-y-8">
@@ -24,7 +24,9 @@ function MentorDashboardContent() {
         <h1 className="text-2xl font-semibold text-ink">
           Welcome back, {user?.displayName}
         </h1>
-        <p className="mt-1 text-ink-soft">Your aspirant&rsquo;s actual preparation state, from real data.</p>
+        <p className="mt-1 text-ink-soft">
+          {viewing ? `${viewing.displayName}'s` : "Your aspirant's"} preparation, from real data.
+        </p>
       </div>
 
       <DashboardAnalytics />

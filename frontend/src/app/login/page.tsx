@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth, ApiError } from "@/lib/auth-context";
 
@@ -104,8 +105,14 @@ export default function LoginPage() {
           )}
         </form>
 
-        <p className="mt-6 text-center text-xs text-ink-soft">
-          Private mentor–aspirant workspace · no public sign-up
+        <p className="mt-6 text-center text-sm text-ink-soft">
+          Preparing for UPSC?{" "}
+          <Link href="/register" className="font-medium text-ink hover:underline">
+            Create an aspirant account
+          </Link>
+        </p>
+        <p className="mt-2 text-center text-xs text-ink-soft">
+          Mentor accounts are created by an existing mentor.
         </p>
       </div>
     </main>

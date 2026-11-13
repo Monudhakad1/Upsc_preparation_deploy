@@ -46,6 +46,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             try {
                 String email = claims.get("email", String.class);
                 UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+                if (!userDetails.isEnabled()) {
+                    // Deactivated account: its still-unexpired token stops working too.
+                    chain.doFilter(request, response);
+                    return;
+                }
 
                 UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());

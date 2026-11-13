@@ -47,7 +47,12 @@ public class GlobalExceptionHandler {
         Map<String, String> fieldErrors = new LinkedHashMap<>();
         ex.getBindingResult().getFieldErrors().forEach(fe ->
                 fieldErrors.put(fe.getField(), fe.getDefaultMessage()));
-        return build(HttpStatus.BAD_REQUEST, "Validation failed", fieldErrors);
+        // Surface the first problem as the message so the UI can show something useful.
+        String message = fieldErrors.isEmpty()
+                ? "Validation failed"
+                : fieldErrors.entrySet().iterator().next().getKey() + ": "
+                        + fieldErrors.entrySet().iterator().next().getValue();
+        return build(HttpStatus.BAD_REQUEST, message, fieldErrors);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
